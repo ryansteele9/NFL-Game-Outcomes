@@ -1,6 +1,76 @@
-player,season,week,team,position_group,Updated,Injury,Injury Status,severity
-D.LondonDrake London,2025,15,ATL,WR_TE,,,,out
-T. AndersenTroy Andersen,2025,15,ATL,FRONT7,"Tue, Dec 9",Knee,Physically Unable to Perform. Expected Return - Week 16,pup
-J.WalkerJalon Walker,2025,15,ATL,FRONT7,,,,questionable
-B. BredesonBen Bredeson,2025,15,TB,OL,"Thu, Dec 11",Knee,IR. Injured Reserve,out
-T.SmithTykee Smith,2025,15,TB,DB,,,,doubtful
+Player,season,week,team,position_group,Updated,Injury,Injury Status,severity
+B. NicholsBilal Nichols,2025,15,ARI,FRONT7,"Sat, Dec 13",Knee,IR. Injured Reserve,ir
+C. JonesChristian Jones,2025,15,ARI,OL,"Sat, Dec 13",Knee,Questionable for Week 15 at Houston,questionable
+M. MeltonMax Melton,2025,15,ARI,DB,"Fri, Dec 12",Heel,Out for Week 15 at Houston. Expected Return - Week 16,out
+M. Harrison Jr.Marvin Harrison Jr.,2025,15,ARI,WR_TE,"Fri, Dec 12",Heel,Out for Week 15 at Houston. Expected Return - Week 16,out
+D. Taylor-DemersonDadrion Taylor-Demerson,2025,15,ARI,DB,"Fri, Dec 12",Ankle,Out for Week 15 at Houston. Expected Return - Week 16,out
+P. Johnson Jr.Paris Johnson Jr.,2025,15,ARI,OL,"Wed, Dec 10",Knee - MCL,Out for Week 15 at Houston. Expected Return - Week 16,out
+T. BensonTrey Benson,2025,15,ARI,RB,"Wed, Dec 10",Knee - Meniscus,IR. Injured Reserve,ir
+W. NolenWalter Nolen,2025,15,ARI,FRONT7,"Mon, Dec 8",Knee,Questionable for Week 15 at Houston,questionable
+E. DemercadoEmari Demercado,2025,15,ARI,RB,"Mon, Dec 8",Ankle,Questionable for Week 15 at Houston,questionable
+A. WashingtonAr'Darius Washington,2025,15,BAL,DB,"Sat, Dec 13",Achilles,Questionable for Week 15 at Cincinnati,questionable
+T. RobinsonTavius Robinson,2025,15,BAL,FRONT7,"Sat, Dec 13",Foot,Questionable for Week 15 at Cincinnati,questionable
+R. BatemanRashod Bateman,2025,15,BAL,WR_TE,"Thu, Dec 11",Ankle,Questionable for Week 15 at Cincinnati,questionable
+J. PalmerJosh Palmer,2025,15,BUF,WR_TE,"Thu, Dec 11",Ankle,Questionable for Week 15 at New England,questionable
+C. BenfordChristian Benford,2025,15,BUF,DB,"Thu, Dec 11",Toe,Questionable for Week 15 at New England,questionable
+T. BernardTerrel Bernard,2025,15,BUF,FRONT7,"Mon, Dec 8",Elbow,Questionable for Week 15 at New England,questionable
+R. OdunzeRome Odunze,2025,15,CHI,WR_TE,"Mon, Dec 8",Foot,Questionable for Week 15 vs. Cleveland,questionable
+T. HigginsTee Higgins,2025,15,CIN,WR_TE,"Fri, Dec 12",Concussion,Out for Week 15 vs. Baltimore. Expected Return - Week 16,out
+Z. ZinterZak Zinter,2025,15,CLE,OL,"Sat, Dec 13",Back,Out for Week 15 at Chicago. Expected Return - Week 16,out
+D. WardDenzel Ward,2025,15,CLE,DB,"Fri, Dec 12",Calf,Out for Week 15 at Chicago. Expected Return - Week 16,out
+J. ConklinJack Conklin,2025,15,CLE,OL,"Fri, Dec 12",Concussion,Out for Week 15 at Chicago. Expected Return - Week 16,out
+W. TellerWyatt Teller,2025,15,CLE,OL,"Fri, Dec 12",Calf,Out for Week 15 at Chicago. Expected Return - Week 16,out
+D. NjokuDavid Njoku,2025,15,CLE,WR_TE,"Fri, Dec 12",Knee,Out for Week 15 at Chicago. Expected Return - Week 16,out
+C. TillmanCedric Tillman,2025,15,CLE,WR_TE,"Thu, Dec 11",Concussion,Questionable for Week 15 at Chicago,questionable
+M. GrahamMason Graham,2025,15,CLE,FRONT7,"Wed, Dec 10",Ribs,Questionable for Week 15 at Chicago,questionable
+J. BitonioJoel Bitonio,2025,15,CLE,OL,"Wed, Dec 10",Knee,Questionable for Week 15 at Chicago,questionable
+M. CorleyMalachi Corley,2025,15,CLE,WR_TE,"Sun, Dec 7",Concussion,Questionable for Week 15 at Chicago,questionable
+T. GuytonTyler Guyton,2025,15,DAL,OL,"Fri, Dec 12",Ankle,Out for Week 15 vs. Minnesota. Expected Return - Week 16,out
+J. FergusonJake Ferguson,2025,15,DAL,WR_TE,"Wed, Dec 10",Calf,Limited Practice on Friday. Questionable for Week 15 vs. Minnesota,questionable
+J. ClowneyJadeveon Clowney,2025,15,DAL,FRONT7,"Mon, Dec 8",Hamstring,Full Practice on Friday. Questionable for Week 15 vs. Minnesota,questionable
+M. McGlincheyMike McGlinchey,2025,15,DEN,OL,"Fri, Dec 12",Shoulder,Did Not Practice on Friday. Questionable for Week 15 vs. Green Bay,questionable
+P. BryantPat Bryant,2025,15,DEN,WR_TE,"Fri, Dec 12",Hamstring,Out for Week 15 vs. Green Bay. Expected Return - Week 16,out
+K. JosephKerby Joseph,2025,15,DET,DB,"Fri, Dec 12",Knee,Out for Week 15 at L.A. Rams. Expected Return - Week 16,out
+T. DeckerTaylor Decker,2025,15,DET,OL,"Wed, Dec 10",Shoulder,Did Not Practice on Friday. Questionable for Week 15 at L.A. Rams,questionable
+S. VakiSione Vaki,2025,15,DET,RB,"Wed, Dec 10",Thumb,Limited Practice on Friday. Questionable for Week 15 at L.A. Rams,questionable
+E. WilsonEmanuel Wilson,2025,15,GB,RB,"Sat, Dec 13",Illness,Questionable for Week 15 at Denver,questionable
+J. JacobsJosh Jacobs,2025,15,GB,RB,"Wed, Dec 10",Knee,Limited Practice on Friday. Questionable for Week 15 at Denver,questionable
+L. Van NessLukas Van Ness,2025,15,GB,FRONT7,"Mon, Dec 8",Foot,Limited Practice on Friday. Questionable for Week 15 at Denver,questionable
+E. SpeedE.J. Speed,2025,15,HOU,FRONT7,"Wed, Dec 10",Knee,Questionable for Week 15 vs. Arizona,questionable
+N. ChubbNick Chubb,2025,15,HOU,RB,"Mon, Dec 8",Ribs,Questionable for Week 15 vs. Arizona,questionable
+S. GardnerSauce Gardner,2025,15,IND,DB,"Fri, Dec 12",Calf,Out for Week 15 at Seattle. Expected Return - Week 16,out
+W. LittleWalker Little,2025,15,JAX,OL,"Mon, Dec 8",Concussion,Questionable for Week 15 vs. N.Y. Jets,questionable
+P. WashingtonParker Washington,2025,15,JAX,WR_TE,"Mon, Dec 8",Hip,Questionable for Week 15 vs. N.Y. Jets,questionable
+T. McDuffieTrent McDuffie,2025,15,KC,DB,"Sun, Dec 7",Knee,Questionable for Week 15 vs. L.A. Chargers,questionable
+Q. JohnstonQuentin Johnston,2025,15,LAC,WR_TE,"Fri, Dec 12",Groin,Questionable for Week 15 at Kansas City,questionable
+E. MoldenElijah Molden,2025,15,LAC,DB,"Fri, Dec 12",Hamstring,Doubtful for Week 15 at Kansas City,doubtful
+T. PipkinsTrey Pipkins,2025,15,LAC,OL,"Fri, Dec 12",Ankle,Doubtful for Week 15 at Kansas City,doubtful
+T. DyeTroy Dye,2025,15,LAC,FRONT7,"Wed, Dec 10",Hip,Questionable for Week 15 at Kansas City,questionable
+D. AdamsDavante Adams,2025,15,LAR,WR_TE,"Wed, Dec 10",Hamstring,Limited Practice on Friday. Questionable for Week 15 vs. Detroit,questionable
+G. SmithGeno Smith,2025,15,LV,QB,"Fri, Dec 12",Shoulder,Out for Week 15 at Philadelphia. Expected Return - Week 16,out
+J. ChinnJeremy Chinn,2025,15,LV,DB,"Wed, Dec 10",Back,Questionable for Week 15 at Philadelphia,questionable
+L. EichenbergLiam Eichenberg,2025,15,MIA,OL,"Thu, Dec 11",Undisclosed,Physically Unable to Perform. Expected Return - Week 16,pup
+C. DarrisawChristian Darrisaw,2025,15,MIN,OL,"Wed, Dec 10",Knee,Limited Practice on Friday. Questionable for Week 15 at Dallas,questionable
+R. SpillaneRobert Spillane,2025,15,NE,FRONT7,"Thu, Dec 11",Foot,Questionable for Week 15 vs. Buffalo,questionable
+A. KamaraAlvin Kamara,2025,15,NO,RB,"Fri, Dec 12",Knee - MCL,Out for Week 15 vs. Carolina. Expected Return - Week 16,out
+J. ReidJustin Reid,2025,15,NO,DB,"Mon, Dec 8",Knee,Limited Practice on Friday. Questionable for Week 15 vs. Carolina,questionable
+D. LawrenceDexter Lawrence,2025,15,NYG,FRONT7,"Fri, Dec 12",Hamstring,Questionable for Week 15 vs. Washington,questionable
+K. ThibodeauxKayvon Thibodeaux,2025,15,NYG,FRONT7,"Fri, Dec 12",Shoulder,Out for Week 15 vs. Washington. Expected Return - Week 16,out
+T. TaylorTyrod Taylor,2025,15,NYJ,QB,"Fri, Dec 12",Groin,Out for Week 15 at Jacksonville. Expected Return - Week 16,out
+M. TaylorMason Taylor,2025,15,NYJ,WR_TE,"Fri, Dec 12",Neck,Out for Week 15 at Jacksonville. Expected Return - Week 16,out
+J. CarterJalen Carter,2025,15,PHI,FRONT7,"Sat, Dec 13",Shoulder,Out for Week 15 vs. Las Vegas. Expected Return - Week 16,out
+L. JohnsonLane Johnson,2025,15,PHI,OL,"Sat, Dec 13",Foot,Out for Week 15 vs. Las Vegas. Expected Return - Week 16,out
+J. PierreJames Pierre,2025,15,PIT,DB,"Sat, Dec 13",Calf,Out for Week 15 vs. Miami. Expected Return - Week 16,out
+A. PeatAndrus Peat,2025,15,PIT,OL,"Sat, Dec 13",Concussion,Out for Week 15 vs. Miami. Expected Return - Week 16,out
+T. WattT.J. Watt,2025,15,PIT,FRONT7,"Fri, Dec 12",Chest,Out for Week 15 vs. Miami. Expected Return - Week 16,out
+D. HarmonDerrick Harmon,2025,15,PIT,FRONT7,"Mon, Dec 8",Knee,Limited Practice on Saturday. Questionable for Week 15 vs. Miami,questionable
+C. McCaffreyChristian McCaffrey,2025,15,SF,RB,"Sat, Dec 13",Back,Full Practice on Friday. Questionable for Week 15 vs. Tennessee,questionable
+S. OkuayinonuSam Okuayinonu,2025,15,SF,FRONT7,"Sat, Dec 13",Ankle,Out for Week 15 vs. Tennessee. Expected Return - Week 16,out
+K. ZeitlerKevin Zeitler,2025,15,TEN,OL,"Thu, Dec 11",Groin,Did Not Practice on Friday. Questionable for Week 15 at San Francisco,questionable
+D. Moore Jr.Dan Moore Jr.,2025,15,TEN,OL,"Thu, Dec 11",Neck,Limited Practice on Friday. Questionable for Week 15 at San Francisco,questionable
+L. CushenberryLloyd Cushenberry,2025,15,TEN,OL,"Mon, Dec 8",Foot,Questionable for Week 15 at San Francisco,questionable
+J. JonesJonathan Jones,2025,15,WAS,DB,"Fri, Dec 12",Ribs,Out for Week 15 at N.Y. Giants. Expected Return - Week 16,out
+D. JacksonDrake Jackson,2025,15,WAS,FRONT7,"Fri, Dec 12",Knee,Out for Week 15 at N.Y. Giants. Expected Return - Week 16,out
+D. SamuelDeebo Samuel,2025,15,WAS,WR_TE,"Fri, Dec 12",Illness,Questionable for Week 15 at N.Y. Giants,questionable
+C. Rodriguez Jr.Chris Rodriguez Jr.,2025,15,WAS,RB,"Wed, Dec 10",Groin,Questionable for Week 15 at N.Y. Giants,questionable
+J. DanielsJayden Daniels,2025,15,WAS,QB,"Wed, Dec 10",Elbow,Out for Week 15 at N.Y. Giants. Expected Return - Week 16,out
