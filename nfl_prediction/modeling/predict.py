@@ -1,6 +1,6 @@
 """
 Predicts the point differentials for given future week. Pulls NFl schedule for
-given season and week from SportsDataIO API and builds matchup DataFrame for
+given season and week from nflverse and builds matchup DataFrame for
 these future matchups. Adds adds features to ensure future matchup df has
 same structure as the DataFrame used for training model. Loads trained model and
 adds model's predictions to df. Then, adjusts for injuries using injury
@@ -20,7 +20,6 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 import typer
-import requests
 
 from nfl_prediction.data.build_matchup_data import add_matchup_strength_features
 from nfl_prediction.data.team_ratings import get_elo_ratings_to_week
@@ -32,8 +31,6 @@ app = typer.Typer(help="Predict NFL game outcomes using trained XGBoost model.")
 
 SCHEDULES_DIR = RAW_DIR / "schedules"
 SCHEDULES_DIR.mkdir(parents=True, exist_ok=True)
-
-SPORTSDATA_API_KEY = os.environ.get("SPORTSDATAIO_API_KEY")
 
 VEGAS_SCALE_MAP = {
     "home_moneyline": 0,
@@ -127,54 +124,25 @@ def load_odds_for_week(season: int, week: int) -> pd.DataFrame:
     
     return odds
 
-def fetch_schedules(season: int, week:int) -> pd.DataFrame:
+def fetch_schedules(season: int, week: int) -> pd.DataFrame:
     """
-    Call Sportradar weekly schedule API.
-    
-    Args:
-        season (int): season year to get schedule from
-        week (int): week # to get schedule from
-        
-    Returns Data Frame with information about future matchups
-    """
-    
-    season_param = f"{season}REG"
-    
-    url = (f"https://api.sportsdata.io/api/nfl/odds/json/ScoresByWeek/{season_param}/{week}?key={SPORTSDATA_API_KEY}")
-    
-    logger.info(f"Fetching ScoresByWeek from SportsDataIO: {url}")
-    response = requests.get(url, timeout=30)
-    response.raise_for_status()
-    
-    data = response.json()
-    
-    if not data:
-        raise ValueError(f"No games returned for season={season_param}, week={week}")
-    
-    df = pd.DataFrame(data)
-    
-    rename_map = {
-        "HomeTeam": "home_team",
-        "AwayTeam": "away_team",
-        "GameKey": "gamekey",
-        "ScoreID": "game_id",
-    }
-    for old, new in rename_map.items():
-        if old in df.columns and new not in df.columns:
-            df = df.rename(columns={old: new})
-    
-    required = {"home_team", "away_team", "game_id"}
-    missing = required - set(df.columns)
-    if missing:
-        raise ValueError(f"ScoresByWeek missing required columns: {missing}")
-    
-    df["season"] = season
-    df["week"] = week
+    Pull the weekly schedule from nflverse (free; replaces the SportsDataIO
+    ScoresByWeek call).
 
-    return df[["season", "week", "game_id", "home_team", "away_team"]]
+    Returns DataFrame with information about future matchups.
+    """
+    from nfl_prediction.data.download_nflverse import load_schedule
+
+    sched = load_schedule([season])
+    df = sched[sched["week"] == week]
+    if df.empty:
+        raise ValueError(f"No games returned for season={season}, week={week}")
+
+    df = df.assign(season=season, week=week)
+    return df[["season", "week", "game_id", "home_team", "away_team", "gameday"]]
 
 def load_schedule(season: int, week: int, season_type: str = "REG") -> pd.DataFrame:
-    csv_path = SCHEDULES_DIR / f"scoresbyweek_{season}{season_type}_{week:02d}.csv"
+    csv_path = SCHEDULES_DIR / f"schedule_{season}{season_type}_{week:02d}.csv"
     if csv_path.exists():
         logger.info(f"Loading schedule from cache: {csv_path}")
         return pd.read_csv(csv_path)
@@ -217,7 +185,9 @@ def build_future_matchups(season: int, week: int, season_type: str = "REG") -> p
     elo_ratings = get_elo_ratings_to_week(hist, season, week)
     
     def elo_lookup(team: str) -> float:
-        return elo_ratings.get("home_elo_pre", 1500.0)
+        # Previously returned elo_ratings.get("home_elo_pre", 1500.0), which is
+        # always 1500 because the dict is keyed by team.
+        return elo_ratings.get(team, 1500.0)
     
     rows = []
     logger.info(f"Building future matchups for {len(schedule_df)} games...")

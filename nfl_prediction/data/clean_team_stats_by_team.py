@@ -6,7 +6,7 @@ Splits season files into one file per team.
 Returns: Team files for each season, saved to: processed/teams/
 """
 import pandas as pd
-from nfl_prediction.config import TEAMS_DIR, CLEAN_STATS_DIR
+from nfl_prediction.config import TEAMS_DIR, CLEAN_STATS_DIR, SEASON_STRS
 
 TEAMS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -38,8 +38,7 @@ def split_cleaned_season(season: str):
         print(f"Saved {out_path} ({len(team_df)} rows)")
 
 def main():
-    seasons = ["2022", "2023", "2024", "2025"]
-    for season in seasons:
+    for season in SEASON_STRS:
         split_cleaned_season(season)
 
 if __name__ == "__main__":

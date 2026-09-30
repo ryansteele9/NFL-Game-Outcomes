@@ -2,6 +2,7 @@
 data/raw/
 data/interim/
 data/external/
+data/processed/
 data/raw/sdio_json/
 data/raw/team_stats_csv/
 data/raw/schedules/

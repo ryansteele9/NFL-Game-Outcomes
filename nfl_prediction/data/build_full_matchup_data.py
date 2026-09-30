@@ -6,7 +6,7 @@ File saved to: processed/matchups
 """
 import pandas as pd
 
-from nfl_prediction.config import MATCHUPS_DIR, ODDS_PROC_DIR
+from nfl_prediction.config import MATCHUPS_DIR, ODDS_PROC_DIR, SEASON_STRS
 from nfl_prediction.data.team_ratings import add_elo_features
 
 
@@ -30,10 +30,10 @@ def load_all_odds() -> pd.DataFrame:
 def combine_matchups():
     """
     Combines all season matchups datasets into one big dataset for seasons 
-    2022-2025. Adds elo ratings and vegas odds to dataset.
+    in config.SEASONS. Adds elo ratings and vegas odds to dataset.
     """
     all_dfs = []
-    for season in ["2022", "2023", "2024", "2025"]:
+    for season in SEASON_STRS:
         file_path = MATCHUPS_DIR / f"matchups_{season}.csv"
         if file_path.exists():
             df = pd.read_csv(file_path)

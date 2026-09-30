@@ -1,4 +1,5 @@
 
+### DEPRECATED: replaced by download_nflverse.py (Python port, same logic).
 ### Downloads play-by-play EPA statistics from nflfastR and computes EPA 
 ### related metrics. Groups play-by-play data into data for each game and joins all
 ### data into one big file for all games in all seasons (2022-2025). 
@@ -29,7 +30,7 @@ summarise(
     off_dropbacks = sum(pass == 1| qb_scramble == 1, na.rm = TRUE),
     off_dropback_epa = ifelse(
         off_dropbacks > 0,
-        mean(epa[pass == 1 | qb_scramble == 1], nm.rm = TRUE),
+        mean(epa[pass == 1 | qb_scramble == 1], na.rm = TRUE),
         NA_real_
     ),
 
@@ -63,7 +64,7 @@ summarise(
     def_rush_epa_against = ifelse(
         def_rushes_against > 0,
         mean(epa[rush == 1], na.rm = TRUE),
-        NA-real_
+        NA_real_
     ),
 
     .groups = "drop"

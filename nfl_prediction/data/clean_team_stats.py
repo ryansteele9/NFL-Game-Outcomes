@@ -1,5 +1,9 @@
 """
-Input: Team-level files for each season (2022-2025)
+Input: Raw SportsDataIO team-level files for each season (2022-2025)
+
+NOTE: 2026+ (and 2025 week 18) come from download_nflverse.py, which writes
+straight to processed/clean_team_stats_season/. If you re-run this script for
+2025, re-run download_nflverse.py --season 2025 afterwards to restore week 18.
 
 Renames some column names and computes statistics like 
 point differential (target variable) and win (bool).
@@ -65,7 +69,7 @@ def clean_season(season: str):
     if "thirddownattempts" in df.columns and "thirddownconversions" in df.columns:
         df["third_down_pct"] = df["thirddownconversions"] / df["thirddownattempts"].replace(0, 1)
 
-    df["home"] = (df["home_away"] == "Home").astype(int)
+    df["home"] = (df["home_away"].str.upper() == "HOME").astype(int)
 
     out_file = CLEAN_STATS_DIR / f"clean_team_stats_{season}.csv"
     df.to_csv(out_file, index=False)

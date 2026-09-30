@@ -4,14 +4,18 @@
     <img src="https://img.shields.io/badge/CCDS-Project%20template-328F97?logo=cookiecutter" />
 </a>
 
-## NFL Game Outcome Prediction Pipeline 2025
-Predict NFL game point differentials for upcoming NFL weeks in 2025 NFL season. 
+## NFL Game Outcome Prediction Pipeline 2026
+Predict NFL game point differentials for upcoming NFL weeks in the 2026 NFL season. 
 Model uses weekly team data, play-by-play analytics, Vegas odds, and other 
 engineered features. 
 
 This project implements an end-to-end machine learning pipeline following the
-Cookiecutter Data Science structure. Requires API key from SportsDataIO 
-(https://discoverylab.sportsdata.io/) to reproduce results.
+Cookiecutter Data Science structure. As of 2026 the pipeline runs entirely on
+free nflverse data (no API key). 2022-2025 box scores were originally pulled
+from SportsDataIO and are kept as-is; 2026 box scores, all odds from 2026 on,
+schedules, and EPA come from nflverse via `download_nflverse.py`. Every model
+input rebuilt from nflverse matches the 2025 SportsDataIO data on 99.6-100% of
+team-games.
 
 ## Project Statement
 NFL games are unpredictable——game outcomes are affected by a host of factors, 
@@ -26,6 +30,8 @@ the outcome of any future NFL game with >55% accuracy.
 ## Datasets
 | Data Type | Source | Size | Notes |
 |----------:|:------:|:----:|:-----:|
+| Weekly NFL data (2026+, 2025 wk 18) | nflverse via nflreadpy | 32 teams x weeks | Free; `download_nflverse.py` |
+| Vegas odds + schedules (2026+) | nflverse via nflreadpy | 1 row per game | Free; `vegas_spread = -spread_line` |
 | Weekly NFL data (2022-2025) | SportsDataIO (https://discoverylab.sportsdata.io/) | Records: 2024; Columns: 159 | API key required |
 | Play-by-play EPA metrics | nflfastR (https://nflfastr.com/) | Records: 2019; Columns: 18 | Used to derive matchup strength features and other advanced metrics |
 | Vegas Odds | SportsDataIO (https://discoverylab.sportsdata.io/) | Records: 1160; Columns: 10 | API key required |
@@ -132,17 +138,27 @@ python -m nfl_prediction.modeling.train
 ```
 None of the steps in the pipeline require parameters.
 
-## Full Pipeline
-1. download_team_stats.py (API required)
-2. download_odds.py (API required)
-3. clean_team_stats.py (Raw data required)
-4. clean_team_stats_by_team.py
-5. nflfastr_build_advanced_stats.R
-6. feature_engineering_team.py
-7. build_matchup_data.py
-8. download_odds.py
-9. build_full_matchup_data.py
-10. train.py
+## Full Pipeline (2026, no API key)
+1. download_nflverse.py --season 2026 (box scores, odds, schedules, EPA)
+2. clean_team_stats_by_team.py
+3. feature_engineering_team.py
+4. build_matchup_data.py
+5. build_full_matchup_data.py
+6. train.py
+7. predict.py --season 2026 --week N
+
+Seasons are set in `config.SEASONS`. Each week: re-run steps 1-7.
+
+The original SportsDataIO steps (download_team_stats.py, download_odds.py,
+clean_team_stats.py, nflfastr_build_advanced_stats.R) are only needed to rebuild
+2022-2025 from raw SDIO data.
+
+### 2026 changes
+- Elo ratings now carry over between seasons, regressed 1/3 toward 1500
+  (`team_ratings.SEASON_REGRESSION`; set to 1.0 for the old full reset).
+- Fixed: predict.py used Elo 1500 for every team.
+- Fixed: the upcoming-week feature row skipped each team's most recent game.
+- Fixed: `home` column was always 0 ("Home" vs "HOME").
 
 ## Results
 ### Test split results for seasons 2023-2025

@@ -35,6 +35,11 @@ MODELS_DIR         = PROJ_ROOT / "models"
 
 SPORTSDATAIO_API_KEY = os.getenv("SPORTSDATAIO_API_KEY")
 
+# Seasons used across the pipeline. 2022-2025 box scores came from SportsDataIO;
+# 2026 onward (and 2025 week 18) come from nflverse via download_nflverse.py.
+SEASONS = [2022, 2023, 2024, 2025, 2026]
+SEASON_STRS = [str(s) for s in SEASONS]
+
 # If tqdm is installed, configure loguru with tqdm.write
 # https://github.com/Delgan/loguru/issues/135
 try:

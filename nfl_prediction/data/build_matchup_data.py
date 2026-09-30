@@ -10,7 +10,7 @@ Returns: Matchup-level files for each season, saved to: processed/matchups/
 """
 import pandas as pd
 
-from nfl_prediction.config import FEATURES_DIR, MATCHUPS_DIR
+from nfl_prediction.config import FEATURES_DIR, MATCHUPS_DIR, SEASON_STRS
 
 
 MATCHUPS_DIR.mkdir(parents=True, exist_ok=True)
@@ -89,7 +89,7 @@ def build_matchups_for_season(season: str):
     print(f"Saved {len(matchups)} games to {out_path}")
 
 def main():
-    for season in ["2022", "2023", "2024", "2025"]:
+    for season in SEASON_STRS:
         build_matchups_for_season(season)
 
 if __name__ == "__main__":

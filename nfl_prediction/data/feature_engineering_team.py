@@ -17,7 +17,7 @@ Returns:
 import pandas as pd
 import numpy as np
 
-from nfl_prediction.config import TEAMS_DIR, FEATURES_DIR
+from nfl_prediction.config import TEAMS_DIR, FEATURES_DIR, SEASON_STRS
 from nfl_prediction.data.nflfastr_epa import load_nflfastr_team_epa
 
 FEATURES_DIR.mkdir(parents=True, exist_ok=True)
@@ -64,6 +64,12 @@ def add_team_features(team_file_path):
     """
     df = pd.read_csv(team_file_path)
     df = df.sort_values(by="week").reset_index(drop=True)
+
+    # Add the future dummy week BEFORE lagging, so that after the shift the
+    # dummy row holds stats through the most recent game. (Previously it was
+    # added after lagging, so it was a copy of the last row and ignored the
+    # most recent game entirely.)
+    df = add_future_dummy_week(df)
     
     season = int(df["season"].iloc[0])
     team = df["team"].iloc[0]
@@ -176,8 +182,6 @@ def add_team_features(team_file_path):
         if col in df.columns:
             df[col] = df[col].round(3)
     
-    df = add_future_dummy_week(df)
-    
     return df
 
 def process_season(season: str):
@@ -200,8 +204,7 @@ def process_season(season: str):
         print(f"Saved: {out_path}")
 
 def main():
-    seasons = ["2022", "2023", "2024", "2025"]
-    for season in seasons:
+    for season in SEASON_STRS:
         print(f"\nBuilding features for season {season}...")
         process_season(season)
 

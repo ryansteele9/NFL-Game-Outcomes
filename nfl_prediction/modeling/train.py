@@ -13,7 +13,7 @@ predicted point differential picks the correct winner, where a positive
 point differential indicates the home team is predicted to win, negative: away.
 Percentage of wins correctly predicted = win accuracy.
 
-Trains final XGBoost model on all available data and saves to models/.
+Trains final XGBoost model on all completed games from 2024 on and saves to models/.
 """
 from pathlib import Path
 import pickle
@@ -72,6 +72,10 @@ def make_rolling_splits(df: pd.DataFrame, start_season: int = 2022) -> list[dict
         train_split = df["season"] < szn
         val_split = (df["season"] == szn) & (df["week"].between(1, 5))
         test_split = (df["season"] == szn) & (df["week"] >= 6)
+        
+        if test_split.sum() == 0:
+            # In-progress season without week 6+ yet (e.g. 2026 early on)
+            continue
         
         splits.append({
             "test_season": szn,
