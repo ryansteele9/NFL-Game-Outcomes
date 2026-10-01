@@ -156,7 +156,10 @@ python -m nfl_prediction.data.build_matchup_data
 python -m nfl_prediction.data.build_full_matchup_data
 python -m nfl_prediction.modeling.train
 python -m nfl_prediction.modeling.predict --season 2026 --week <next week>
+python -m nfl_prediction.modeling.prediction_log update    # score last week's logged picks
+python -m nfl_prediction.modeling.prediction_log summary   # season-to-date record vs Vegas
 ```
+Run `predict` close to kickoff: the model was trained on near-closing lines.
 
 ### Steps, inputs and parameters
 
@@ -168,7 +171,25 @@ python -m nfl_prediction.modeling.predict --season 2026 --week <next week>
 | 4 | `data/build_matchup_data.py` | Joins each team to its opponent (one row per game, home perspective); adds strength and EPA differentials | none | `data/processed/matchups/matchups_<season>.csv` |
 | 5 | `data/build_full_matchup_data.py` | Stacks all seasons, drops unplayed games, adds Elo and Vegas odds | none | `data/processed/matchups/matchups_all_seasons.csv` |
 | 6 | `modeling/train.py` | Leak-free tuning and rolling-split evaluation, then tunes and trains the final model | `--features-path` (default: `matchups_all_seasons.csv`)<br>`--model-path` (default: `models/xgb_point_diff.pkl`)<br>`--tune / --no-tune` (default: tune; `--no-tune` uses the fixed params in `train.py`) | `models/xgb_point_diff.pkl`, `reports/predictions_{train,test}_<season>.csv` |
-| 7 | `modeling/predict.py` | Builds matchup rows for an upcoming week from the dummy rows, current Elo and odds; predicts; applies injury adjustments if an injury file exists | `--season` (required)<br>`--week` (required)<br>`--season-type` (default `REG`)<br>`--model-path`<br>`--home-team`, `--away-team`, `--game-id` (filters)<br>`--save-matchups` (writes the rows to `data/processed/matchups/`) | Printed table of predicted margins, winners and win probabilities |
+| 7 | `modeling/predict.py` | Builds matchup rows for an upcoming week from the dummy rows, current Elo and odds; predicts; applies injury adjustments if an injury file exists; logs the predictions | `--season` (required)<br>`--week` (required)<br>`--season-type` (default `REG`)<br>`--model-path`<br>`--home-team`, `--away-team`, `--game-id` (filters)<br>`--save-matchups` (writes the rows to `data/processed/matchups/`)<br>`--log / --no-log` (default: log) | Printed table of predicted margins, winners and win probabilities; rows appended to `reports/live/predictions_log.csv` |
+| 8 | `modeling/prediction_log.py` | `update`: fills in final scores and closing lines for logged games. `summary`: season-to-date accuracy of pre-kickoff picks | `update` (no options)<br>`summary --season YEAR` (optional) | Updates `reports/live/predictions_log.csv`; prints a weekly table |
+
+### Live prediction log
+Backtests can be tuned, consciously or not; a log of picks made before kickoff
+can't. Every `predict.py` run appends its predictions to
+`reports/live/predictions_log.csv` (tracked in git, so the record is
+timestamped by your commits too), along with:
+- when the prediction was made, and the game's kickoff time
+- the Vegas spread, total and implied probability at that moment
+- a fingerprint of the model file that made it
+
+Rules that keep it honest: rows are only appended, never edited; predictions
+logged at or after kickoff are flagged and excluded; if a game was predicted
+more than once, the last pre-kickoff prediction counts. `summary` reports
+straight-up accuracy, MAE against Vegas, ATS accuracy against both the line at
+prediction time and the closing line, and closing-line value (how far the line
+moved toward the model's side after the pick). Use `--no-log` for experiments.
+The log starts with 2026 week 4.
 
 ### Optional: injury adjustments
 Injuries only adjust predictions after the fact; they aren't model features.
@@ -318,7 +339,8 @@ NFL-Game-Outcomes/
 │   └── modeling/
 │       ├── train.py                      ← Step 6: rolling evaluation + final model
 │       ├── tune_xgb.py                   ← Leak-free grid-search tuning (called by train.py)
-│       └── predict.py                    ← Step 7: predicts an upcoming week
+│       ├── predict.py                    ← Step 7: predicts an upcoming week (and logs it)
+│       └── prediction_log.py             ← Step 8: scores and summarizes the live log
 │
 ├── models/
 │   └── xgb_point_diff.pkl                ← Trained model + feature list
@@ -335,6 +357,7 @@ NFL-Game-Outcomes/
 │   └── cbs_injury_report.ipynb           ← Injury report filtering
 │
 ├── reports/
+│   ├── live/predictions_log.csv          ← Live pre-kickoff predictions + results
 │   ├── predictions_test_<season>.csv     ← Test-split predictions (from train.py)
 │   ├── predictions_train_<season>.csv    ← Train-split predictions (from train.py)
 │   ├── variable_inventory.py             ← Builds variable inventory (original SDIO data)

@@ -22,6 +22,7 @@ from loguru import logger
 import typer
 
 from nfl_prediction.data.build_matchup_data import add_matchup_strength_features
+from nfl_prediction.modeling.prediction_log import log_predictions
 from nfl_prediction.data.team_ratings import get_elo_ratings_to_week
 from nfl_prediction.data.injury_adjust import compute_team_injury_adjustments, apply_injury_adjustments
 from nfl_prediction.data.build_matchup_data import add_matchup_strength_features
@@ -312,6 +313,10 @@ def main(
         False,
         help="If set, save synthetic future matchup rows to data/matchups/.",
     ),
+    log: bool = typer.Option(
+        True,
+        help="Append predictions to reports/live/predictions_log.csv (use --no-log for experiments).",
+    ),
 ):
     """
     Predict point differential for all games in a scheduled future week.
@@ -355,6 +360,9 @@ def main(
         logger.warning(f"No injury file found at {inj_path}; predictions are unadjusted.")
     
     print_pred_results(df_pred)
+    
+    if log:
+        log_predictions(df_pred, season, week, model_path)
     
     logger.success("Prediction Complete.")
 
