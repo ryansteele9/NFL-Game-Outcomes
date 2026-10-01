@@ -94,8 +94,8 @@ SportsDataIO-based files locally).
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/ryansteele9/NFL_Predict_Repo_INST414.git
-cd NFL_Predict_Repo_INST414
+git clone https://github.com/ryansteele9/NFL-Game-Outcomes.git
+cd NFL-Game-Outcomes
 ```
 
 ### 2. Create and activate a virtual environment
@@ -232,7 +232,7 @@ the games played to date, before any week 6+ test set exists.
 ## Project Organization
 
 ```
-NFL_Predict_Repo_INST414/
+NFL-Game-Outcomes/
 ├── README.md
 ├── LICENSE
 ├── Makefile                 ← Cookiecutter convenience commands
