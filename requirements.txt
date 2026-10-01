@@ -1,35 +1,22 @@
-attr==0.3.2
-ConfigParser==7.2.0
-cryptography==46.0.3
-Cython==3.2.2
-dl==0.1.0
-docutils==0.18.1
-docutils==0.18.1
-filelock==3.20.0
-HTMLParser==0.0.2
-ipython==8.27.0
-ipython==8.12.3
-ipywidgets==7.8.1
-jnius==1.1.0
-keyring==24.3.1
-loguru==0.7.3
-numpy==2.3.5
-ordereddict==1.1
-pandas==1.5.3
-protobuf==4.25.3
-pyOpenSSL==24.2.1
-pyOpenSSL==25.3.0
-pytest==8.3.4
-python-dotenv==1.2.1
-redis==7.1.0
-scikit_learn==1.7.2
-Sphinx==9.0.4
-thread==2.0.5
-tqdm==4.66.5
-typer==0.20.0
-typing_extensions==4.15.0
-urllib3_secure_extra==0.1.0
-xgboost==3.1.2
-xmlrpclib==1.0.1
-nflreadpy
-pyarrow
+# Core pipeline
+pandas>=2.0,<3.0
+numpy>=1.26
+xgboost>=2.0
+scikit-learn>=1.4
+loguru>=0.7
+typer>=0.12
+python-dotenv>=1.0
+tqdm>=4.66
+
+# Free data source (nflverse)
+nflreadpy>=0.1.5
+pyarrow>=15.0
+
+# Injury report scraping (optional step)
+requests>=2.31
+lxml>=5.0
+
+# Notebooks / EDA
+matplotlib>=3.8
+seaborn>=0.13
+jupyter

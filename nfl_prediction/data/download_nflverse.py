@@ -11,7 +11,8 @@ Builds, for the requested seasons:
        added, so running this for 2025 just fills in week 18.
     2. Weekly odds files in the download_odds.py format, saved to
        raw/odds/ and processed/odds/ (only weeks that have lines posted).
-       Existing odds files are left alone unless --overwrite-odds is passed.
+       Current-season odds are always refreshed; other seasons' existing odds
+       files are left alone unless --overwrite-odds is passed.
     3. Weekly schedules (for predict.py) saved to raw/schedules/.
     4. Team-game EPA metrics (Python port of nflfastr_build_advanced_stats.R),
        saved to external/nflfastr/team_game_advanced.csv for all seasons given
@@ -29,8 +30,10 @@ Conventions (checked against 2025):
     - gamekey = f"{season}1{week:02d}{home SDIO team id:02d}", same as SDIO
 
 Usage:
-    python -m nfl_prediction.data.download_nflverse --season 2026
+    python -m nfl_prediction.data.download_nflverse            # current season (weekly)
+    python -m nfl_prediction.data.download_nflverse --all      # every season (fresh clone)
     python -m nfl_prediction.data.download_nflverse --season 2025 --season 2026
+    python -m nfl_prediction.data.download_nflverse --validate 2025  # compare with SDIO
 """
 from __future__ import annotations
 
@@ -385,6 +388,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--season", type=int, action="append",
                         help="Season(s) to download box scores/odds for (default: latest in config.SEASONS)")
+    parser.add_argument("--all", action="store_true",
+                        help="Download every season in config.SEASONS (use on a fresh clone)")
     parser.add_argument("--epa-seasons", type=int, nargs="*", default=None,
                         help="Seasons for the EPA file (default: all of config.SEASONS)")
     parser.add_argument("--overwrite-odds", action="store_true",
@@ -400,7 +405,7 @@ def main():
         print(report.to_string(index=False))
         return
 
-    seasons = args.season or [max(SEASONS)]
+    seasons = list(SEASONS) if args.all else (args.season or [max(SEASONS)])
     epa_seasons = args.epa_seasons or list(SEASONS)
 
     sched = load_schedule(seasons)
@@ -411,7 +416,9 @@ def main():
         rows = build_team_games(season, sched, ts, pbp_all)
         if not rows.empty:
             upsert_clean_season(season, rows)
-        save_odds(build_odds(season, sched), overwrite=args.overwrite_odds)
+        # Current season: always refresh so upcoming weeks get the latest lines
+        save_odds(build_odds(season, sched),
+                  overwrite=args.overwrite_odds or season == max(SEASONS))
         save_schedules(season, sched)
 
     epa = build_team_game_epa(pbp_all[pbp_all["season"].isin(epa_seasons)])
