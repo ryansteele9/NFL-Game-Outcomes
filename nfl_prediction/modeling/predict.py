@@ -258,7 +258,7 @@ def add_predictions(df_games: pd.DataFrame, model, feature_cols: List[str]) -> p
     df_games[feature_cols] = df_games[feature_cols].fillna(0)
     
     X = df_games[feature_cols].to_numpy()
-    preds = model.predict(X)
+    preds = model.predict(X).astype(float)
     
     df_games["pred_point_diff"] = preds
     df_games["pred_winner"] = np.where(preds > 0, "home", "away")

@@ -70,9 +70,9 @@ SportsDataIO-based files locally).
 
 ## Modeling Methods
 - **Target:** home-team point differential (one row per game, home perspective)
-- **Model:** XGBoost regressor (600 trees, depth 1, learning rate 0.05). The
-  hyperparameters were chosen by grid search (`tune_xgb.py`) and are fixed in
-  `train.py`.
+- **Model:** XGBoost regressor (600 trees, learning rate 0.05). Tree
+  hyperparameters (depth, min child weight, subsampling, regularization) come
+  from a grid search in `tune_xgb.py`, which `train.py` runs automatically.
 - **Features (29):** Vegas spread and home implied probability; Elo ratings
   (home, away, difference); the prior game's passing attempts, rushing yards per
   attempt, QB hits, sack yards and opponent penalty yards; 3-game rolling points
@@ -83,12 +83,26 @@ SportsDataIO-based files locally).
 - **No leakage:** every stat feature is shifted so that a row only sees games
   played before it. Each team's upcoming week is a "dummy" row holding stats
   through its most recent game.
+- **Early-season carry-over:** before computing rolling and lagged features,
+  each team's last 5 games of the previous season are added in front of the
+  current season, pulled 1/3 of the way toward that season's league average.
+  So week 1 features reflect last season instead of being empty (previously
+  filled with 0), and weeks 2–4 blend old and new games until the window is all
+  current-season. Cumulative season-to-date stats are not carried over.
+  2022 has no prior season in the data, so its early weeks start empty.
+  (`feature_engineering_team.EARLY_SEASON_CARRYOVER`, `PRIOR_GAMES`,
+  `PRIOR_REGRESSION`)
 - **Elo:** updated game by game with a margin-of-victory multiplier. Ratings
   carry over between seasons, pulled 1/3 of the way back toward 1500 each
   offseason (`team_ratings.SEASON_REGRESSION`).
 - **Validation:** rolling-origin splits. For test season *s*, the model trains
-  on seasons < *s*, validates on weeks 1–5 of *s* and tests on weeks 6+ of *s*.
-- **Final model:** trained on all completed games from 2024 onward.
+  on seasons < *s* and is tested on weeks 6+ of *s*.
+- **Leak-free tuning:** for each split, hyperparameters are chosen using only
+  games played before the test weeks: every earlier season (each validated by
+  a model trained on the seasons before it) plus weeks 1–5 of *s*.
+- **Final model:** trained on all completed games, with hyperparameters tuned
+  the same way on all completed games. It's trained the same way as the models
+  that were evaluated.
 
 ## Installation
 
@@ -153,7 +167,7 @@ python -m nfl_prediction.modeling.predict --season 2026 --week <next week>
 | 3 | `data/feature_engineering_team.py` | Merges EPA; adds lagged rolling/cumulative features; adds each team's upcoming-week dummy row | none | `data/processed/features/<season>/` |
 | 4 | `data/build_matchup_data.py` | Joins each team to its opponent (one row per game, home perspective); adds strength and EPA differentials | none | `data/processed/matchups/matchups_<season>.csv` |
 | 5 | `data/build_full_matchup_data.py` | Stacks all seasons, drops unplayed games, adds Elo and Vegas odds | none | `data/processed/matchups/matchups_all_seasons.csv` |
-| 6 | `modeling/train.py` | Rolling-split evaluation, then trains and saves the final model | `--features-path` (default: `matchups_all_seasons.csv`)<br>`--model-path` (default: `models/xgb_point_diff.pkl`) | `models/xgb_point_diff.pkl`, `reports/predictions_{train,test}_<season>.csv` |
+| 6 | `modeling/train.py` | Leak-free tuning and rolling-split evaluation, then tunes and trains the final model | `--features-path` (default: `matchups_all_seasons.csv`)<br>`--model-path` (default: `models/xgb_point_diff.pkl`)<br>`--tune / --no-tune` (default: tune; `--no-tune` uses the fixed params in `train.py`) | `models/xgb_point_diff.pkl`, `reports/predictions_{train,test}_<season>.csv` |
 | 7 | `modeling/predict.py` | Builds matchup rows for an upcoming week from the dummy rows, current Elo and odds; predicts; applies injury adjustments if an injury file exists | `--season` (required)<br>`--week` (required)<br>`--season-type` (default `REG`)<br>`--model-path`<br>`--home-team`, `--away-team`, `--game-id` (filters)<br>`--save-matchups` (writes the rows to `data/processed/matchups/`) | Printed table of predicted margins, winners and win probabilities |
 
 ### Optional: injury adjustments
@@ -169,10 +183,11 @@ This part is semi-manual:
 4. `predict.py` picks up `injuries_week<NN>_curated.csv` automatically when
    it exists.
 
-### Optional: hyperparameter tuning
-`modeling/tune_xgb.py` runs a grid search over rolling season splits. To
-re-tune, uncomment the `tune_xgb_hyperparams` call in `train.py` and pass
-`**best_params` to the model.
+### Hyperparameter tuning
+`train.py` calls `tune_xgb.py` for every split and for the final model (adds well
+under a minute). To change the search, edit `param_grid` in `tune_xgb.py`.
+The final model's chosen parameters are saved in the model pickle under
+`"params"`.
 
 ### Legacy SportsDataIO scripts
 `download_team_stats.py`, `download_odds.py`, `clean_team_stats.py` and
@@ -187,20 +202,36 @@ data). Test sets are weeks 6–18 of each season (194 games).
 ### Test-split results
 | Test season | MAE | RMSE | R² | Model win accuracy | Vegas favorite win accuracy |
 |:-----------:|:---:|:----:|:--:|:------------------:|:---------------------------:|
-| 2023 | 10.00 | 12.52 | 0.127 | 60.3% | 69.6% |
-| 2024 | 9.50 | 12.25 | 0.314 | 71.6% | 75.3% |
-| 2025 | 10.92 | 13.12 | 0.150 | 60.8% | 64.9% |
-| 2026 wk 1–3* | 11.27 | — | — | 60.4% | — |
+| 2023 | 9.98 | 12.49 | 0.131 | 60.8% | 69.6% |
+| 2024 | 9.53 | 12.18 | 0.322 | 71.6% | 75.3% |
+| 2025 | 11.05 | 13.26 | 0.132 | 61.3% | 64.9% |
+| 2026 wk 1–3* | 10.69 | — | — | 60.4% | — |
 
 \*2026 so far (48 games) comes from a model trained on 2022–2025 and scored on
-the games played to date, before any week 6+ test set exists.
+the games played to date, before any week 6+ test set exists. Vegas MAE on
+these games was 10.41.
 
 ### Compared with Vegas
 | Test season | Beat-Vegas % | Avg. edge vs Vegas (MAE diff) | ATS accuracy (model) |
 |:-----------:|:------------:|:-----------------------------:|:--------------------:|
-| 2023 | 42.3% | +0.70 | 52.6% |
-| 2024 | 52.6% | +0.08 | 57.7% |
-| 2025 | 37.1% | +1.05 | 43.3% |
+| 2023 | 42.8% | +0.68 | 53.1% |
+| 2024 | 51.0% | +0.11 | 56.7% |
+| 2025 | 39.2% | +1.18 | 45.9% |
+
+### Early-season effect of the carry-over
+Weeks 1–5 of each season (2026: weeks 1–3), with each model trained on prior
+seasons and the fixed hyperparameters, so tuning doesn't affect the comparison:
+
+| Season | Win accuracy (empty → carry-over) | MAE (empty → carry-over) | Vegas MAE |
+|:------:|:---------------------------------:|:------------------------:|:---------:|
+| 2023 | 57.7% → 61.5% | 12.19 → 11.90 | 11.40 |
+| 2024 | 65.4% → 64.1% | 10.64 → 10.00 | 10.09 |
+| 2025 | 59.0% → 62.8% | 10.25 → 9.80 | 9.35 |
+| 2026 | 60.4% → 60.4% | 11.27 → 10.69 | 10.41 |
+| **All (282 games)** | **60.6% → 62.4%** | **11.07 → 10.59** | **10.30** |
+
+Weeks 6+ were essentially unchanged by the carry-over (MAE 10.14 → 10.19 across
+2023–2025).
 
 - **Beat-Vegas %:** share of test games where the model's predicted margin was
   closer to the actual result than the Vegas spread was.
@@ -217,8 +248,15 @@ the games played to date, before any week 6+ test set exists.
 - The Vegas features (implied probability and spread) account for over half of
   the final model's total gain. Most of what the model knows comes from the
   market, which explains why it trails Vegas: it's largely re-learning the line.
-  After those, the most important features are sack yards, rolling points,
-  Elo and dropback EPA.
+  After those, the most important features are rolling EPA, the opponent's win
+  rate, sack yards and the Elo difference.
+- Carrying last season into the early weeks cut early-season error by about
+  half a point per game, and closed most of the gap to Vegas in weeks 1–5.
+- Leak-free tuning picked the original hand-chosen parameters for every split
+  except 2024. So the earlier tuning leak inflated the reported results very
+  little. One caveat remains: the 29-feature list was selected earlier in
+  `feature_importance.ipynb` using all seasons, so a small optimistic bias may
+  remain in the test numbers.
 
 ### Changes from the original (2025) version
 - Data source switched from SportsDataIO to nflverse (see the validation table above).
@@ -226,6 +264,11 @@ the games played to date, before any week 6+ test set exists.
 - Fixed: each team's upcoming-week feature row left out its most recent game.
 - Elo now carries over between seasons with regression to the mean instead of
   resetting to 1500.
+- Early-season features are seeded from the prior season (see above) instead
+  of being filled with 0.
+- Hyperparameter tuning no longer sees the test games, and runs automatically.
+- The final model is trained on all completed games (it was 2024 onward),
+  matching how the evaluated models are trained.
 - The earlier README reported 66.7% win accuracy for 2025. That number came from
   a partial season; the full-season figure is about 61%.
 
@@ -274,7 +317,7 @@ NFL-Game-Outcomes/
 │   │   └── nflfastr_build_advanced_stats.R ← Legacy (R version of EPA build)
 │   └── modeling/
 │       ├── train.py                      ← Step 6: rolling evaluation + final model
-│       ├── tune_xgb.py                   ← Grid-search hyperparameter tuning
+│       ├── tune_xgb.py                   ← Leak-free grid-search tuning (called by train.py)
 │       └── predict.py                    ← Step 7: predicts an upcoming week
 │
 ├── models/

@@ -5,7 +5,7 @@ Scales Vegas odds (scaled very low to limit impact on model), makes rolling
 time-splits for training, selects features for training, and 
 trains/validates/tests on rolling time-splits. Rolling time splits works as
 follows: for season s, train: seasons < s, validate: s weeks 1-5, test: s weeks 6+.
-Hyperparameters are determined via grid-search. 
+Hyperparameters are determined via leak-free grid-search. 
 
 Evaluation metrics used are mean absolute error, root mean squared error, r2, 
 and win accuracy (classification). Win accuracy is determined by checking if the
@@ -13,7 +13,9 @@ predicted point differential picks the correct winner, where a positive
 point differential indicates the home team is predicted to win, negative: away.
 Percentage of wins correctly predicted = win accuracy.
 
-Trains final XGBoost model on all completed games from 2024 on and saves to models/.
+Hyperparameters are tuned per split using only games before that split's test
+weeks (tune_xgb.py). The final XGBoost model is trained on all completed games,
+with params tuned on all completed games, and saved to models/.
 """
 from pathlib import Path
 import pickle
@@ -29,6 +31,25 @@ from nfl_prediction.config import MODELS_DIR, MATCHUPS_DIR
 from nfl_prediction.modeling.tune_xgb import tune_xgb_hyperparams
 
 app = typer.Typer()
+
+BASE_PARAMS = dict(
+    objective="reg:squarederror",
+    n_estimators=600,
+    learning_rate=0.05,
+    eval_metric="rmse",
+    random_state=34,
+    n_jobs=1,
+)
+
+# Used when tuning is turned off (--no-tune); the original hand-picked set.
+DEFAULT_TREE_PARAMS = dict(
+    max_depth=1,
+    min_child_weight=14,
+    subsample=0.9,
+    colsample_bytree=0.6,
+    reg_lambda=3.0,
+    reg_alpha=0.0,
+)
 
 VEGAS_SCALE_MAP = {
     "home_moneyline": 0.0,
@@ -159,7 +180,8 @@ def select_features(df: pd.DataFrame, target_col: str) -> list[str]:
 
 @app.command()
 def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv", 
-         model_path: Path = MODELS_DIR / "xgb_point_diff.pkl"):
+         model_path: Path = MODELS_DIR / "xgb_point_diff.pkl",
+         tune: bool = typer.Option(True, help="Grid-search params per split using only pre-test games")):
     logger.info(f"Loading data from {features_path}")
     df = pd.read_csv(features_path)
     
@@ -203,22 +225,13 @@ def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv",
             f"Train: {len(X_train)} rows | Val: {len(X_val)} rows | Test: {len(X_test)} rows"
         )
     
-        # best_params = tune_xgb_hyperparams(df, feature_cols, target_col)
-        model = xgb.XGBRegressor(
-            objective="reg:squarederror",
-            n_estimators=600,
-            learning_rate=0.05,
-            eval_metric="rmse",
-            random_state=34,
-            n_jobs=1,
-            # **best_params,
-            max_depth=1,
-            min_child_weight=14,
-            subsample=0.9,
-            colsample_bytree=0.6,
-            reg_lambda=3.0,
-            reg_alpha=0.0,
+        # Tune only on games before this season's test weeks (no test leakage)
+        tree_params = (
+            (tune_xgb_hyperparams(df, feature_cols, target_col, cutoff=(int(test_season), 6))
+             or DEFAULT_TREE_PARAMS)
+            if tune else DEFAULT_TREE_PARAMS
         )
+        model = xgb.XGBRegressor(**BASE_PARAMS, **tree_params)
 
         logger.info(f"[Season {test_season}] Training XGBoost model...")
         model.fit(
@@ -336,32 +349,23 @@ def main(features_path: Path = MATCHUPS_DIR / "matchups_all_seasons.csv",
         logger.info(f"Saved predictions for season {test_season}\n")
     
 
-    final_train_mask = df["season"] >= 2024
-    X_final = X[final_train_mask]
-    y_final = y[final_train_mask]
+    # Final model is trained exactly like the evaluated ones: all completed
+    # games, with params tuned the same way (now using every completed game).
+    X_final = X
+    y_final = y
     
-    final_model = xgb.XGBRegressor(
-        objective="reg:squarederror",
-        n_estimators=600,
-        learning_rate=0.05,
-        eval_metric="rmse",
-        random_state=34,
-        n_jobs=1,
-        # **best_params,
-        max_depth=1,
-        min_child_weight=14,
-        subsample=0.9,
-        colsample_bytree=0.6,
-        reg_lambda=3.0,
-        reg_alpha=0.0,
+    final_params = (
+        (tune_xgb_hyperparams(df, feature_cols, target_col, cutoff=None) or DEFAULT_TREE_PARAMS)
+        if tune else DEFAULT_TREE_PARAMS
     )
+    final_model = xgb.XGBRegressor(**BASE_PARAMS, **final_params)
         
     logger.info(f"Training FINAL model on all completed games...")
     final_model.fit(X_final, y_final, verbose=False)
         
     model_path.parent.mkdir(parents=True, exist_ok=True)
     with open(model_path, "wb") as file:
-        pickle.dump({"model": final_model, "features": feature_cols}, file)
+        pickle.dump({"model": final_model, "features": feature_cols, "params": final_params}, file)
     
     logger.success(f"Saved FINAL trained model to {model_path}")
 

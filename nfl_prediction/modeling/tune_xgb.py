@@ -1,7 +1,8 @@
 """
 Helper function that tunes hyperparameters for model. Uses grid-search to train
 model on different sets of parameters. Returns parameters that give best mean
-absolute error. Used to get parameters for model in train.py.
+absolute error on validation folds that end before the test games. Used by
+train.py for every rolling split and for the final model.
 """
 import pandas as pd
 from loguru import logger
@@ -12,18 +13,35 @@ import numpy as np
 
 
 
-def tune_xgb_hyperparams(df: pd.DataFrame, feature_cols: list[str], target_col: str) -> dict:
+def tune_xgb_hyperparams(
+    df: pd.DataFrame,
+    feature_cols: list[str],
+    target_col: str,
+    cutoff: tuple[int, int] | None = None,
+    min_val_season: int = 2023,
+) -> dict | None:
     """
-    Brute-force tune a small XGBoost hyperparameter grid using rolling season splits.
-    Train and validate models with different parameters. Evaluate parameters by 
-    lowest MAE, parameters resulting in lowest MAE are used for final model.
+    Grid-search XGBoost hyperparameters using only games played BEFORE `cutoff`
+    (season, week), so the test games of a split never influence the choice.
+
+    Folds: for each season t >= min_val_season, train on seasons < t and
+    validate on season t's games that fall before the cutoff. For test season s
+    (cutoff = (s, 6)) that means every earlier season in full plus weeks 1-5 of
+    s. cutoff=None uses every completed game (for the final model).
+
+    Parameters are ranked by average validation MAE across folds.
     """
+    if cutoff is None:
+        before = pd.Series(True, index=df.index)
+    else:
+        c_season, c_week = cutoff
+        before = (df["season"] < c_season) | ((df["season"] == c_season) & (df["week"] < c_week))
 
-    seasons = sorted(df["season"].unique())
-    
-    candidate_test_seasons = [s for s in seasons if s >= 2023]
+    candidate_val_seasons = sorted(
+        s for s in df.loc[before, "season"].unique() if s >= min_val_season
+    )
 
-    logger.info(f"Hyperparameter tuning across test seasons: {candidate_test_seasons}")
+    logger.info(f"Hyperparameter tuning (cutoff={cutoff}) across validation seasons: {candidate_val_seasons}")
 
     param_grid = [
         {"max_depth": 1, "min_child_weight": 10, "subsample": 0.8, "colsample_bytree": 0.6, "reg_lambda": 2.0, "reg_alpha": 0.0},
@@ -44,12 +62,12 @@ def tune_xgb_hyperparams(df: pd.DataFrame, feature_cols: list[str], target_col: 
     y_full = df[target_col]
 
     for i, params in enumerate(param_grid, start=1):
-        logger.info(f"Testing param set {i}/{len(param_grid)}: {params}")
+        logger.debug(f"Testing param set {i}/{len(param_grid)}: {params}")
         fold_maes: list[float] = []
 
-        for test_season in candidate_test_seasons:
-            train_mask = df["season"] < test_season
-            val_mask   = df["season"] == test_season
+        for val_season in candidate_val_seasons:
+            train_mask = df["season"] < val_season
+            val_mask   = (df["season"] == val_season) & before
 
             if train_mask.sum() == 0 or val_mask.sum() == 0:
                 continue
@@ -69,7 +87,7 @@ def tune_xgb_hyperparams(df: pd.DataFrame, feature_cols: list[str], target_col: 
                 **params,
             )
 
-            model.fit(X_train, y_train)
+            model.fit(X_train, y_train, verbose=False)
             preds = model.predict(X_val)
             mae = mean_absolute_error(y_val, preds)
             fold_maes.append(mae)
@@ -78,14 +96,15 @@ def tune_xgb_hyperparams(df: pd.DataFrame, feature_cols: list[str], target_col: 
             continue
 
         avg_mae = float(np.mean(fold_maes))
-        logger.info(f"Param set {i}: avg validation MAE across seasons = {avg_mae:.3f}")
+        logger.debug(f"Param set {i}: avg validation MAE across seasons = {avg_mae:.3f}")
 
         if avg_mae < best_score:
             best_score = avg_mae
             best_params = params
 
     if best_params is None:
-        raise RuntimeError("Hyperparameter tuning failed: no valid folds/params evaluated.")
+        logger.warning(f"No validation games before cutoff={cutoff}; caller should use default params.")
+        return None
 
-    logger.success(f"Best params: {best_params} with avg MAE={best_score:.3f}")
+    logger.info(f"Best params (cutoff={cutoff}): {best_params} with avg val MAE={best_score:.3f}")
     return best_params
